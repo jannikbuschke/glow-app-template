@@ -108,7 +108,7 @@ namespace TemplateName
                 routes.EnableDependencyInjection();
             });
 
-            app.Map("", v =>
+            app.Map("/hello", v =>
             {
                 v.Run(async ctx =>
                 {
