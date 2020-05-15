@@ -1,0 +1,3 @@
+[submodule "app/web"]
+	path = app/web
+	url = https://github.com/jannikbuschke/cra-antd-x.git
