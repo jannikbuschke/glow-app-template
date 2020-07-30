@@ -1,9 +1,7 @@
 {
   "folders": [
     {
-      "path": "."
-    },
-    {
+      "name": "app",
       "path": "app\\web"
     }
   ],
