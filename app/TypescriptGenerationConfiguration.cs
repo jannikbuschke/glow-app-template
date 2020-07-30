@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MediatR;
 using Reinforced.Typings.Ast.TypeNames;
 using Reinforced.Typings.Fluent;
 
@@ -31,8 +32,8 @@ namespace TemplateName
                 options.UseModules(true);
             });
 
-            //builder.ExportAsInterface<Contacts.Contact>()
-            //    .WithDefaults();
+            builder.ExportAsInterface<Unit>()
+                .WithDefaults();
         }
     }
 }
