@@ -4,7 +4,7 @@ using MediatR;
 using Reinforced.Typings.Ast.TypeNames;
 using Reinforced.Typings.Fluent;
 
-namespace TemplateName
+namespace RT
 {
     public static class InterfaceExportBuilderExtensions
     {

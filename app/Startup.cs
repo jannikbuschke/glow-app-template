@@ -1,10 +1,7 @@
-using System.Linq;
 using System.Net;
 using AutoMapper;
 using AutoMapper.EquivalencyExpression;
 using MediatR;
-using Microsoft.AspNet.OData.Builder;
-using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,22 +11,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace TemplateName
 {
     public class Startup
     {
+        private readonly ILogger<Startup> logger;
+
         public IConfiguration Configuration { get; }
 
-        public Startup(IWebHostEnvironment env, IConfiguration configuration)
+        public Startup(IWebHostEnvironment env, IConfiguration configuration, ILogger<Startup> logger)
         {
             Configuration = configuration;
-
-            Log.Information("Configuring " + env.ApplicationName);
-            Log.Information("Environment: " + env.EnvironmentName);
-            Log.Information("ContentRoot: " + env.ContentRootPath);
+            this.logger = logger;
+            logger.LogInformation($"Configuring: '{env.ApplicationName}'");
+            logger.LogInformation($"Environment: '{env.EnvironmentName}'");
+            logger.LogInformation($"ContentRoot: '{env.ContentRootPath}'");
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -61,7 +60,6 @@ namespace TemplateName
                 options.DefaultApiVersion = new ApiVersion(1, 0);
                 options.ReportApiVersions = true;
             });
-            services.AddOData().EnableApiVersioning();
 
             services.AddAutoMapper(cfg =>
             {
@@ -83,8 +81,7 @@ namespace TemplateName
 
         public void Configure(
             IApplicationBuilder app,
-            IWebHostEnvironment env,
-            VersionedODataModelBuilder modelBuilder
+            IWebHostEnvironment env
         )
         {
             if (env.IsDevelopment())
@@ -101,12 +98,7 @@ namespace TemplateName
 
             app.UseAuthentication();
 
-            app.UseMvc(routes =>
-            {
-                routes.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
-                routes.MapVersionedODataRoutes("odata", "odata", modelBuilder.GetEdmModels());
-                routes.EnableDependencyInjection();
-            });
+            app.UseMvc();
 
             app.Map("/hello", v =>
             {
@@ -117,17 +109,14 @@ namespace TemplateName
                 });
             });
 
-            foreach (string route in new string[] { "/api", "/odata" })
+            app.Map("/api", builder =>
             {
-                app.Map(route, builder =>
+                builder.Run(async context =>
                 {
-                    builder.Run(async context =>
-                    {
-                        context.Response.StatusCode = (int) HttpStatusCode.NotFound;
-                        await context.Response.WriteAsync("");
-                    });
+                    context.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                    await context.Response.CompleteAsync();
                 });
-            }
+            });
 
             app.UseSpa(spa =>
             {
