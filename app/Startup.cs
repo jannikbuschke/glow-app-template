@@ -18,14 +18,13 @@ namespace TemplateName
 {
     public class Startup
     {
-        private readonly ILogger<Startup> logger;
-
-        public IConfiguration Configuration { get; }
+        private readonly IWebHostEnvironment env;
+        private readonly IConfiguration configuration;
 
         public Startup(IWebHostEnvironment env, IConfiguration configuration, ILogger<Startup> logger)
         {
-            Configuration = configuration;
-            this.logger = logger;
+            this.env = env;
+            this.configuration = configuration;
             logger.LogInformation($"Configuring: '{env.ApplicationName}'");
             logger.LogInformation($"Environment: '{env.EnvironmentName}'");
             logger.LogInformation($"ContentRoot: '{env.ContentRootPath}'");
@@ -75,7 +74,7 @@ namespace TemplateName
 
             services.AddDbContext<DataContext>(options =>
             {
-                options.UseSqlServer(Configuration.GetValue<string>("ConnectionString"));
+                options.UseSqlServer(configuration.GetValue<string>("ConnectionString"));
             });
         }
 

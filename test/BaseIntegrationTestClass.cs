@@ -46,7 +46,7 @@ namespace TemplateName.Test
             return scope.ServiceProvider.GetRequiredService<T>();
         }
 
-        protected Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default(CancellationToken))
+        protected Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             return GetRequiredService<IMediator>().Send(request);
         }

@@ -51,7 +51,7 @@ namespace TemplateName
         public static int Main(string[] args)
         {
             Log.Logger = GetPreStartLogger();
-            string name = typeof(Program).Namespace;
+            var name = typeof(Program).Namespace;
             Log.Information($"Starting {name}");
 
             try
@@ -102,14 +102,14 @@ namespace TemplateName
                 .ConfigureAppConfiguration((context, config) =>
                 {
                     IConfigurationRoot cfg = config.Build();
-                    string name = cfg.GetValue<string>("KeyVaultName");
+                    var name = cfg.GetValue<string>("KeyVaultName");
 
                     if (context.HostingEnvironment.IsProduction() && !string.IsNullOrEmpty(name))
                     {
-                        string keyvaultDns = $"https://{name}.vault.azure.net/";
+                        var keyvaultDns = $"https://{name}.vault.azure.net/";
                         Log.Information("Using KeyVault {KeyVault}", keyvaultDns);
-                        AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
-                        KeyVaultClient keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                        var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                        var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
                         config.AddAzureKeyVault(keyvaultDns, keyVaultClient, new DefaultKeyVaultSecretManager());
                     }
                     else
