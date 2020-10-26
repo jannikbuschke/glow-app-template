@@ -84,7 +84,7 @@ namespace TemplateName
                 options.UseSqlServer(configuration.GetValue<string>("ConnectionString"));
             });
 
-            services.AddTypescriptGeneration(new[] { Assembly.GetExecutingAssembly() });
+            //services.AddTypescriptGeneration(new[] { Assembly.GetExecutingAssembly() });
         }
 
         public void Configure(
