@@ -1,11 +1,13 @@
 using System;
 using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using AutoMapper;
 using AutoMapper.EquivalencyExpression;
 using Glow.Authentication.Aad;
 using Glow.Configurations;
+using Glow.TypeScript;
 using JannikB.Glue.AspNetCore;
 using JannikB.Glue.AspNetCore.Tests;
 using MediatR;
@@ -81,6 +83,8 @@ namespace TemplateName
             {
                 options.UseSqlServer(configuration.GetValue<string>("ConnectionString"));
             });
+
+            services.AddTypescriptGeneration(new[] { Assembly.GetExecutingAssembly() });
         }
 
         public void Configure(
