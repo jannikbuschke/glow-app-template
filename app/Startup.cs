@@ -7,9 +7,12 @@ using AutoMapper;
 using AutoMapper.EquivalencyExpression;
 using Glow.Authentication.Aad;
 using Glow.Configurations;
+using Glow.Core;
+using Glow.Core.EfMsalTokenStore;
+using Glow.Glue.AspNetCore;
+using Glow.Tests;
 using Glow.TypeScript;
-using JannikB.Glue.AspNetCore;
-using JannikB.Glue.AspNetCore.Tests;
+using Glow.Users;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -57,15 +60,6 @@ namespace TemplateName
                     options.SerializerSettings.Formatting = Formatting.Indented;
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
-
-            services.AddVersionedApiExplorer(o => o.GroupNameFormat = "'v'VVV");
-
-            services.AddApiVersioning(options =>
-            {
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.DefaultApiVersion = new ApiVersion(1, 0);
-                options.ReportApiVersions = true;
-            });
 
             services.AddAutoMapper(cfg =>
             {
@@ -201,10 +195,8 @@ namespace TemplateName
             IConfiguration configuration
         )
         {
-            services.AddSingleton<TokenService>();
-            services.AddSingleton<UserTokenCacheProviderFactory>();
-            services.AddSingleton<TicketStoreService>();
-            services.AddMemoryCache();
+            services.AddGlowAadIntegration(env, configuration);
+
             var testUser = new UserDto { DisplayName = "testuser", Email = "test@sample.com", Id = "1" };
             if (env.IsDevelopment() && configuration.MockExternalSystems())
             {
