@@ -67,16 +67,19 @@ namespace TemplateName
 
                 using (IServiceScope scope = host.Services.CreateScope())
                 {
-                    DataContext db = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    db = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    if (EnvironmentName == "Development" || EnvironmentName == "Test")
+                    IServiceProvider service = scope.ServiceProvider;
+                    try
                     {
-                        //db.Database.EnsureDeleted();
+                        DataContext db = service.GetRequiredService<DataContext>();
+                        if (EnvironmentName == "Development" || EnvironmentName == "Test")
+                        {
+                            //db.Database.EnsureDeleted();
+                        }
                         db.Database.Migrate();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        db.Database.Migrate();
+                        Log.Error(ex, "An error occurred creating the DB.");
                     }
                 }
 
