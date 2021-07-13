@@ -124,6 +124,9 @@ namespace TemplateName
                 });
             });
 
+            app.UseStaticFiles();
+            app.UseSpaStaticFiles();
+
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "web";
