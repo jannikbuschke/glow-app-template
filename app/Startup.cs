@@ -48,30 +48,12 @@ namespace TemplateName
             services.AddCustomAuthentication(env, configuration);
             services.AddCustomAuthorization();
 
-            services.AddApplicationInsightsTelemetry();
-
-            services.AddMvc(options =>
-                {
-                    options.EnableEndpointRouting = false;
-                })
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddNewtonsoftJson(options =>
-                {
-                    options.SerializerSettings.Formatting = Formatting.Indented;
-                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                });
-
-            services.AddAutoMapper(cfg =>
+            services.AddGlowApplicationServices(assembliesToScan: new[]
             {
-                cfg.AddCollectionMappers();
-            }, typeof(Startup).Assembly);
-
-            services.AddMediatR(typeof(Startup).Assembly);
-
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "web/build";
+                typeof(Startup).Assembly, typeof(Glow.Core.ServiceExtensions).Assembly
             });
+
+            services.AddApplicationInsightsTelemetry();
 
             services.AddDbContext<DataContext>(options =>
             {
@@ -80,8 +62,7 @@ namespace TemplateName
 
             services.AddTypescriptGeneration(new TsGenerationOptions
             {
-                Path = "web/models/",
-                Assemblies = new[] { typeof(Startup).Assembly },
+                Path = "./web/src/ts-models/", Assemblies = new[] {typeof(Startup).Assembly}, GenerateApi = true
             });
         }
 
@@ -90,89 +71,19 @@ namespace TemplateName
             IWebHostEnvironment env
         )
         {
-            if (env.IsDevelopment())
+            app.UseCors(options =>
             {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthentication();
-
-            app.UseMvc();
-
-            app.Map("/hello", v =>
-            {
-                v.Run(async ctx =>
-                {
-                    ctx.Response.StatusCode = (int) HttpStatusCode.OK;
-                    await ctx.Response.WriteAsync("hello world");
-                });
+                options.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
             });
-
-            app.Map("/api", builder =>
+            app.UseGlow(env, configuration, options =>
             {
-                builder.Run(async context =>
-                {
-                    context.Response.StatusCode = (int) HttpStatusCode.NotFound;
-                    await context.Response.CompleteAsync();
-                });
-            });
-
-            app.UseStaticFiles();
-            app.UseSpaStaticFiles();
-
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "web";
-
-                if (env.IsDevelopment())
-                {
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
-                }
+                options.SpaDevServerUri = "http://localhost:3000";
             });
         }
     }
 
     public static class StartupExtensions
     {
-        public static void AddCustomSpaStaticFiles(this IServiceCollection services)
-        {
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "web/build";
-            });
-        }
-
-        public static void AddCustomMediatR(this IServiceCollection services)
-        {
-            services.AddMediatR(typeof(Startup).Assembly, typeof(ConfigurationUpdate).Assembly);
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-        }
-
-        public static void AddCustomAutoMapper(this IServiceCollection services)
-        {
-            services.AddAutoMapper(cfg =>
-            {
-                cfg.AddCollectionMappers();
-                //cfg.AddExpressionMapping();
-            }, typeof(Startup).Assembly);
-        }
-
-        public static void AddCustomSignalR(this IServiceCollection services)
-        {
-            services.AddSignalR().AddJsonProtocol(options =>
-            {
-                options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
-            //services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
-        }
-
         public static void AddCustomAuthorization(this IServiceCollection services)
         {
             services.AddAuthorization(options =>
@@ -204,14 +115,15 @@ namespace TemplateName
         {
             services.AddGlowAadIntegration(env, configuration);
 
-            var testUser = new UserDto { DisplayName = "testuser", Email = "test@sample.com", Id = "1" };
+            var testUser = new UserDto {DisplayName = "testuser", Email = "test@sample.com", Id = "1"};
             if (env.IsDevelopment() && configuration.MockExternalSystems())
             {
                 services.AddTestAuthentication(
                     testUser.Id,
                     testUser.DisplayName,
                     testUser.Email,
-                    new[] {
+                    new[]
+                    {
                         new Claim(ClaimsPrincipalExtensions.ObjectId, testUser.Id),
                         new Claim(ClaimsPrincipalExtensions.TenantId, "our-comp-tenant@id.com")
                     });
@@ -231,23 +143,11 @@ namespace TemplateName
 
                         if (string.IsNullOrEmpty(options.ClientSecret))
                         {
-                            options.ClientSecret = configuration["ClientSecret"] ?? throw new Exception("No Clientsecret configured");
+                            options.ClientSecret = configuration["ClientSecret"] ??
+                                                   throw new Exception("No Clientsecret configured");
                         }
                     });
             }
-        }
-    }
-
-    public static class IConfigurationExtensions
-    {
-        public static bool MockExternalSystems(this IConfiguration configuration)
-        {
-            return configuration.GetValue<bool>("MockDependencies") || configuration.GetValue<bool>("MockExternalSystems");
-        }
-
-        public static string GetAppBaseUrl(this IConfiguration configuration)
-        {
-            return configuration.GetValue<string>("OpenIdConnect:BaseUrl");
         }
     }
 }
